@@ -1,26 +1,245 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Custom bet-manager colors */
+  --color-neon: var(--neon);
+  --color-neon-dim: var(--neon-dim);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ==============================
+   Dark-only theme (bet-analytix style)
+   Always dark - no light mode
+   ============================== */
+:root {
+  /* Core backgrounds - deep navy/dark */
+  --background: oklch(0.13 0.015 265);
+  --foreground: oklch(0.97 0 0);
+
+  /* Card surfaces */
+  --card: oklch(0.18 0.015 265);
+  --card-foreground: oklch(0.97 0 0);
+
+  /* Popover */
+  --popover: oklch(0.18 0.015 265);
+  --popover-foreground: oklch(0.97 0 0);
+
+  /* Primary: Neon green (bet-analytix signature) */
+  --primary: oklch(0.82 0.18 165);
+  --primary-foreground: oklch(0.13 0.015 265);
+
+  /* Secondary */
+  --secondary: oklch(0.22 0.015 265);
+  --secondary-foreground: oklch(0.9 0 0);
+
+  /* Muted */
+  --muted: oklch(0.22 0.015 265);
+  --muted-foreground: oklch(0.6 0 0);
+
+  /* Accent: purple/indigo gradient accent */
+  --accent: oklch(0.22 0.015 265);
+  --accent-foreground: oklch(0.9 0 0);
+
+  /* Destructive */
+  --destructive: oklch(0.65 0.2 25);
+
+  /* Borders */
+  --border: oklch(0.25 0.015 265);
+  --input: oklch(0.22 0.015 265);
+  --ring: oklch(0.82 0.18 165);
+
+  /* Charts - neon green palette */
+  --chart-1: oklch(0.82 0.18 165);
+  --chart-2: oklch(0.65 0.15 280);
+  --chart-3: oklch(0.7 0.15 145);
+  --chart-4: oklch(0.75 0.12 55);
+  --chart-5: oklch(0.6 0.18 25);
+
+  --radius: 0.75rem;
+
+  /* Sidebar */
+  --sidebar: oklch(0.16 0.015 265);
+  --sidebar-foreground: oklch(0.9 0 0);
+  --sidebar-primary: oklch(0.82 0.18 165);
+  --sidebar-primary-foreground: oklch(0.13 0.015 265);
+  --sidebar-accent: oklch(0.22 0.015 265);
+  --sidebar-accent-foreground: oklch(0.9 0 0);
+  --sidebar-border: oklch(0.25 0.015 265);
+  --sidebar-ring: oklch(0.82 0.18 165);
+
+  /* Custom tokens */
+  --neon: oklch(0.85 0.2 165);
+  --neon-dim: oklch(0.7 0.15 165);
+  --success: oklch(0.72 0.17 155);
+  --danger: oklch(0.65 0.22 25);
+  --warning: oklch(0.8 0.15 75);
+  --surface: oklch(0.2 0.015 265);
+  --surface-hover: oklch(0.25 0.015 265);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ==============================
+   Custom utility classes
+   ============================== */
+
+/* Neon green text gradient */
+.text-gradient-neon {
+  background: linear-gradient(135deg, oklch(0.85 0.2 165), oklch(0.7 0.15 155));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Purple/indigo action gradient */
+.bg-gradient-action {
+  background: linear-gradient(135deg, oklch(0.5 0.2 280), oklch(0.55 0.2 290), oklch(0.6 0.18 310));
+}
+
+.bg-gradient-action:hover {
+  background: linear-gradient(135deg, oklch(0.45 0.22 280), oklch(0.5 0.22 290), oklch(0.55 0.2 310));
+}
+
+/* Green gradient for chart headers */
+.bg-gradient-green {
+  background: linear-gradient(135deg, oklch(0.65 0.18 165), oklch(0.75 0.16 155));
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: oklch(0.18 0.015 265 / 80%);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.3 0.015 265 / 50%);
+}
+
+/* Stat card with subtle gradient border */
+.stat-card {
+  background: oklch(0.16 0.015 265);
+  border: 1px solid oklch(0.25 0.015 265);
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: oklch(0.35 0.015 265);
+  transform: translateY(-1px);
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: oklch(0.13 0.015 265);
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.3 0.015 265);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.4 0.015 265);
+}
+
+/* Bet state colors */
+.bet-won {
+  color: oklch(0.72 0.17 155);
+}
+
+.bet-lost {
+  color: oklch(0.65 0.22 25);
+}
+
+.bet-pending {
+  color: oklch(0.7 0.15 75);
+}
+
+.bet-refunded {
+  color: oklch(0.6 0 0);
+}
+
+/* Pulse animation for pending bets */
+@keyframes pulse-neon {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.85 0.2 165 / 40%);
+  }
+  50% {
+    box-shadow: 0 0 0 6px oklch(0.85 0.2 165 / 0%);
+  }
+}
+
+.animate-pulse-neon {
+  animation: pulse-neon 2s ease-in-out infinite;
+}
+
+/* Tabular numbers for stats */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
