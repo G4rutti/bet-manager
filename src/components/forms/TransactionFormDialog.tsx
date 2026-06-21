@@ -30,6 +30,8 @@ interface TransactionFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
   bookmakers: Bookmaker[];
+  initialType?: "deposit" | "withdrawal" | "transfer";
+  initialBookmakerId?: string;
 }
 
 export function TransactionFormDialog({
@@ -38,13 +40,15 @@ export function TransactionFormDialog({
   onOpenChange,
   onSaved,
   bookmakers,
+  initialType,
+  initialBookmakerId,
 }: TransactionFormDialogProps) {
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState<"deposit" | "withdrawal" | "transfer">(
-    "deposit"
+    initialType || "deposit"
   );
   const [amount, setAmount] = useState("");
-  const [bookmakerId, setBookmakerId] = useState("none");
+  const [bookmakerId, setBookmakerId] = useState(initialBookmakerId || "none");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
 
@@ -58,12 +62,12 @@ export function TransactionFormDialog({
     if (open) {
       resetForm();
     }
-  }, [open]);
+  }, [open, initialType, initialBookmakerId]);
 
   const resetForm = () => {
-    setType("deposit");
+    setType(initialType || "deposit");
     setAmount("");
-    setBookmakerId("none");
+    setBookmakerId(initialBookmakerId || "none");
     setDate(new Date().toISOString().split("T")[0]);
     setNotes("");
     setSourceId("free");

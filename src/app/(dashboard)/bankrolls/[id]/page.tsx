@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Plus,
+  Minus,
   BarChart3,
   CalendarDays,
   ListOrdered,
   ArrowLeft,
   ChevronRight,
   HelpCircle,
+  History,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Bankroll, Bet, Bookmaker } from "@/types";
@@ -35,6 +37,8 @@ export default function BankrollDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [betDialogOpen, setBetDialogOpen] = useState(false);
   const [txDialogOpen, setTxDialogOpen] = useState(false);
+  const [txType, setTxType] = useState<"deposit" | "withdrawal" | "transfer">("deposit");
+  const [txBookmakerId, setTxBookmakerId] = useState<string>("none");
   const [timeRange, setTimeRange] = useState<string>("all");
   const supabase = createClient();
 
@@ -247,7 +251,7 @@ export default function BankrollDetailPage({ params }: PageProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Link href={`/bankrolls/${id}/statistics`}>
           <Button
             variant="outline"
@@ -264,6 +268,15 @@ export default function BankrollDetailPage({ params }: PageProps) {
           >
             <CalendarDays className="w-4 h-4 mr-2" />
             Apostas
+          </Button>
+        </Link>
+        <Link href={`/bankrolls/${id}/transactions`}>
+          <Button
+            variant="outline"
+            className="w-full border-border bg-card hover:bg-surface-hover h-12"
+          >
+            <History className="w-4 h-4 mr-2" />
+            Transações
           </Button>
         </Link>
       </div>
@@ -310,7 +323,11 @@ export default function BankrollDetailPage({ params }: PageProps) {
               variant="outline"
               size="sm"
               className="border-dashed border-primary/30 hover:border-primary/50 text-xs gap-1.5 h-8"
-              onClick={() => setTxDialogOpen(true)}
+              onClick={() => {
+                setTxType("deposit");
+                setTxBookmakerId("none");
+                setTxDialogOpen(true);
+              }}
             >
               <Plus className="w-3.5 h-3.5" />
               Nova Transação
@@ -349,10 +366,42 @@ export default function BankrollDetailPage({ params }: PageProps) {
                   <p className="text-[11px] text-muted-foreground">Capital nunca apostado</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className={`text-sm font-bold font-mono ${bancaLivre > 0 ? "text-success" : "text-muted-foreground"}`}>
-                  R$ {bancaLivre.toFixed(2)}
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className={`text-sm font-bold font-mono ${bancaLivre > 0 ? "text-success" : "text-muted-foreground"}`}>
+                    R$ {bancaLivre.toFixed(2)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 border-l border-border/30 pl-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-lg hover:bg-success/15 hover:text-success text-muted-foreground transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTxType("deposit");
+                      setTxBookmakerId("none");
+                      setTxDialogOpen(true);
+                    }}
+                    title="Depositar saldo livre"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-lg hover:bg-danger/15 hover:text-danger text-muted-foreground transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTxType("withdrawal");
+                      setTxBookmakerId("none");
+                      setTxDialogOpen(true);
+                    }}
+                    title="Sacar saldo livre"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -382,11 +431,43 @@ export default function BankrollDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`text-sm font-bold font-mono ${item.balance > 0 ? "text-success" : "text-muted-foreground"}`}>
-                    R$ {item.balance.toFixed(2)}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">disponível</p>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className={`text-sm font-bold font-mono ${item.balance > 0 ? "text-success" : "text-muted-foreground"}`}>
+                      R$ {item.balance.toFixed(2)}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">disponível</p>
+                  </div>
+                  <div className="flex items-center gap-1 border-l border-border/30 pl-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 rounded-lg hover:bg-success/15 hover:text-success text-muted-foreground transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTxType("deposit");
+                        setTxBookmakerId(item.bookmaker.id);
+                        setTxDialogOpen(true);
+                      }}
+                      title={`Depositar dinheiro na ${item.bookmaker.name}`}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 rounded-lg hover:bg-danger/15 hover:text-danger text-muted-foreground transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTxType("withdrawal");
+                        setTxBookmakerId(item.bookmaker.id);
+                        setTxDialogOpen(true);
+                      }}
+                      title={`Sacar dinheiro da ${item.bookmaker.name}`}
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -414,6 +495,8 @@ export default function BankrollDetailPage({ params }: PageProps) {
         onOpenChange={setTxDialogOpen}
         onSaved={loadData}
         bookmakers={allBookmakers}
+        initialType={txType}
+        initialBookmakerId={txBookmakerId}
       />
 
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 lg:bottom-8 z-50">
