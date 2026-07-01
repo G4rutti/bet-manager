@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Wallet, Clock, Settings } from "lucide-react";
 import { toast } from "sonner";
-import type { BankrollWithStats } from "@/types";
+import type { BankrollWithStats, Bookmaker } from "@/types";
 
 export default function BankrollsPage() {
   const [bankrolls, setBankrolls] = useState<BankrollWithStats[]>([]);
@@ -30,11 +30,40 @@ export default function BankrollsPage() {
     start_date: new Date().toISOString().split("T")[0],
     end_date: "",
   });
+  const [activeBookmakers, setActiveBookmakers] = useState<Bookmaker[]>([]);
+  const [showAllocations, setShowAllocations] = useState(false);
+  const [allocations, setAllocations] = useState<Record<string, string>>({});
+
   const supabase = createClient();
 
   useEffect(() => {
     loadBankrolls();
+    loadBookmakers();
   }, []);
+
+  const loadBookmakers = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("bookmakers")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("active", true)
+      .order("name");
+
+    if (data) {
+      setActiveBookmakers(data);
+    }
+  };
+
+  const totalAllocated = Object.values(allocations).reduce((sum, val) => {
+    const num = parseFloat(val);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
+  const startingCapitalNum = parseFloat(formData.starting_capital) || 0;
+  const remainingBalance = startingCapitalNum - totalAllocated;
 
   const loadBankrolls = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -86,25 +115,82 @@ export default function BankrollsPage() {
       return;
     }
 
+    const startingCapitalNum = parseFloat(formData.starting_capital);
+    if (isNaN(startingCapitalNum) || startingCapitalNum <= 0) {
+      toast.error("O capital inicial deve ser maior que zero");
+      return;
+    }
+
+    if (showAllocations && remainingBalance < 0) {
+      toast.error("A soma do capital alocado nas casas excede o capital inicial");
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase.from("bankrolls").insert({
-      user_id: user.id,
-      name: formData.name.trim(),
-      starting_capital: parseFloat(formData.starting_capital),
-      start_date: formData.start_date,
-      end_date: formData.end_date || null,
-      status: "active",
-    });
+    const { data: newBankroll, error } = await supabase
+      .from("bankrolls")
+      .insert({
+        user_id: user.id,
+        name: formData.name.trim(),
+        starting_capital: startingCapitalNum,
+        start_date: formData.start_date,
+        end_date: formData.end_date || null,
+        status: "active",
+      })
+      .select()
+      .single();
 
-    if (error) {
+    if (error || !newBankroll) {
       toast.error("Erro ao criar bankroll");
       return;
     }
 
+    // Insert allocation transactions if any
+    if (showAllocations && Object.keys(allocations).length > 0) {
+      const txsToInsert = [];
+      for (const [bmId, amountStr] of Object.entries(allocations)) {
+        const amountVal = parseFloat(amountStr);
+        if (isNaN(amountVal) || amountVal <= 0) continue;
+        const bm = activeBookmakers.find((b) => b.id === bmId);
+        const bmName = bm ? bm.name : "Casa";
+        const transferNote = `Transferência: Saldo Livre → ${bmName} | Saldo Inicial`;
+
+        txsToInsert.push(
+          {
+            bankroll_id: newBankroll.id,
+            type: "withdrawal" as const,
+            amount: amountVal,
+            transaction_date: formData.start_date,
+            bookmaker_id: null,
+            notes: transferNote,
+          },
+          {
+            bankroll_id: newBankroll.id,
+            type: "deposit" as const,
+            amount: amountVal,
+            transaction_date: formData.start_date,
+            bookmaker_id: bmId,
+            notes: transferNote,
+          }
+        );
+      }
+
+      if (txsToInsert.length > 0) {
+        const { error: txError } = await supabase
+          .from("bankroll_transactions")
+          .insert(txsToInsert);
+        if (txError) {
+          toast.error("Bankroll criado, mas erro ao registrar saldos iniciais");
+        }
+      }
+    }
+
     toast.success("Bankroll criado com sucesso!");
     setDialogOpen(false);
+    setShowAllocations(false);
+    setAllocations({});
     setFormData({
       name: "",
       starting_capital: "",
@@ -208,7 +294,14 @@ export default function BankrollsPage() {
           ))}
 
           {/* Add bankroll */}
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          {/* Add bankroll */}
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              setShowAllocations(false);
+              setAllocations({});
+            }
+          }}>
             <DialogTrigger asChild>
               <Card className="stat-card cursor-pointer border-dashed border-2 border-border/50 hover:border-primary/30 transition-colors">
                 <CardContent className="p-8 flex flex-col items-center justify-center">
@@ -290,16 +383,89 @@ export default function BankrollsPage() {
                     />
                   </div>
                 </div>
+
+                {activeBookmakers.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-border/40">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold cursor-pointer" htmlFor="toggle-allocations">
+                        Distribuir capital inicial entre as casas?
+                      </Label>
+                      <input
+                        id="toggle-allocations"
+                        type="checkbox"
+                        checked={showAllocations}
+                        onChange={(e) => {
+                          setShowAllocations(e.target.checked);
+                          if (!e.target.checked) setAllocations({});
+                        }}
+                        className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                      />
+                    </div>
+                    
+                    {showAllocations && (
+                      <div className="space-y-2.5 bg-surface/50 p-3 rounded-lg border border-border/35 max-h-48 overflow-y-auto">
+                        <p className="text-[11px] text-muted-foreground mb-1.5">
+                          Defina o saldo inicial em cada casa. O restante ficará como Banca Livre.
+                        </p>
+                        <div className="space-y-2">
+                          {activeBookmakers.map((bm) => (
+                            <div key={bm.id} className="flex items-center gap-3">
+                              <span className="text-xs font-medium text-foreground w-1/3 truncate" title={bm.name}>
+                                {bm.name}
+                              </span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="R$ 0,00"
+                                value={allocations[bm.id] || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setAllocations((prev) => ({
+                                    ...prev,
+                                    [bm.id]: val,
+                                  }));
+                                }}
+                                className="bg-background h-8 text-xs flex-1"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="border-t border-border/30 pt-2 flex flex-col gap-1 text-[11px]">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Distribuído:</span>
+                            <span className="font-semibold text-success">
+                              R$ {totalAllocated.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Banca Livre restante:</span>
+                            <span className={`font-semibold ${remainingBalance < 0 ? "text-danger" : "text-muted-foreground"}`}>
+                              R$ {remainingBalance.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="ghost"
-                    onClick={() => setDialogOpen(false)}
+                    onClick={() => {
+                      setDialogOpen(false);
+                      setShowAllocations(false);
+                      setAllocations({});
+                    }}
                   >
                     Cancelar
                   </Button>
                   <Button
                     onClick={handleCreate}
                     className="bg-gradient-action text-white hover:opacity-90"
+                    disabled={showAllocations && remainingBalance < 0}
                   >
                     Criar Bankroll
                   </Button>
