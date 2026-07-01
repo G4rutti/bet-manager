@@ -16,13 +16,28 @@ import {
   ChevronRight,
   HelpCircle,
   History,
+  FileSpreadsheet,
+  Loader2,
+  Archive,
+  ArchiveRestore,
+  AlertTriangle,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Bankroll, Bet, Bookmaker } from "@/types";
 import { ProfitChart } from "@/components/charts/ProfitChart";
 import { calculateProfitTimeline } from "@/lib/calculations/statistics";
 import { BetFormDialog } from "@/components/forms/BetFormDialog";
 import { TransactionFormDialog } from "@/components/forms/TransactionFormDialog";
+import { exportBankrollToExcel } from "@/lib/export/bankrollExcel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -40,7 +55,42 @@ export default function BankrollDetailPage({ params }: PageProps) {
   const [txType, setTxType] = useState<"deposit" | "withdrawal" | "transfer">("deposit");
   const [txBookmakerId, setTxBookmakerId] = useState<string>("none");
   const [timeRange, setTimeRange] = useState<string>("all");
+  const [exporting, setExporting] = useState(false);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const supabase = createClient();
+
+  const isArchived = bankroll?.status === "archived";
+
+  const handleToggleArchive = async () => {
+    if (!bankroll) return;
+    setArchiving(true);
+    const newStatus = isArchived ? "active" : "archived";
+    const { error } = await supabase
+      .from("bankrolls")
+      .update({ status: newStatus })
+      .eq("id", id);
+    if (error) {
+      toast.error("Erro ao atualizar status do bankroll");
+    } else {
+      toast.success(
+        newStatus === "archived" ? "Bankroll arquivado!" : "Bankroll reativado!"
+      );
+      setBankroll({ ...bankroll, status: newStatus });
+    }
+    setArchiving(false);
+    setArchiveDialogOpen(false);
+  };
+
+  const handleExportExcel = async () => {
+    if (!bankroll) return;
+    setExporting(true);
+    try {
+      exportBankrollToExcel(bankroll, bets, transactions, allBookmakers);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -226,7 +276,103 @@ export default function BankrollDetailPage({ params }: PageProps) {
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 border-border/80 bg-card hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-400 transition-all h-9 px-3 text-xs font-medium"
+            onClick={handleExportExcel}
+            disabled={exporting}
+            title="Exportar dados do bankroll como Excel"
+          >
+            {exporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">{exporting ? "Exportando..." : "Exportar Excel"}</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className={`flex items-center gap-2 h-9 px-3 text-xs font-medium transition-all ${
+              isArchived
+                ? "border-success/40 bg-success/10 text-success hover:bg-success/20"
+                : "border-border/80 bg-card hover:bg-warning/10 hover:border-warning/40 hover:text-warning"
+            }`}
+            onClick={() => setArchiveDialogOpen(true)}
+            title={isArchived ? "Reativar bankroll" : "Arquivar bankroll"}
+          >
+            {isArchived ? (
+              <ArchiveRestore className="w-4 h-4" />
+            ) : (
+              <Archive className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">{isArchived ? "Reativar" : "Arquivar"}</span>
+          </Button>
+        </div>
       </div>
+
+      {/* Archived Banner */}
+      {isArchived && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-warning/10 border border-warning/25 text-warning">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">Bankroll arquivado</p>
+            <p className="text-xs text-warning/80">Este bankroll está encerrado. Novos registros de apostas e transações estão bloqueados.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Archive Confirmation Dialog */}
+      <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {isArchived ? (
+                <><ArchiveRestore className="w-5 h-5 text-success" /> Reativar Bankroll</>
+              ) : (
+                <><Archive className="w-5 h-5 text-warning" /> Arquivar Bankroll</>
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground pt-1">
+              {isArchived
+                ? "O bankroll voltará a aceitar novas apostas e transações."
+                : "O bankroll ficará somente leitura. Você poderá consultar o histórico, mas não poderá registrar novas apostas ou movimentar valores."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 pt-2">
+            <Button
+              variant="ghost"
+              className="flex-1"
+              onClick={() => setArchiveDialogOpen(false)}
+              disabled={archiving}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className={`flex-1 ${
+                isArchived
+                  ? "bg-success/20 text-success border border-success/30 hover:bg-success/30"
+                  : "bg-warning/20 text-warning border border-warning/30 hover:bg-warning/30"
+              }`}
+              onClick={handleToggleArchive}
+              disabled={archiving}
+            >
+              {archiving ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : isArchived ? (
+                <ArchiveRestore className="w-4 h-4 mr-2" />
+              ) : (
+                <Archive className="w-4 h-4 mr-2" />
+              )}
+              {archiving ? "Aguarde..." : isArchived ? "Reativar" : "Arquivar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Chart */}
       <div className="bg-gradient-green rounded-2xl p-4 relative overflow-hidden">
@@ -322,12 +468,14 @@ export default function BankrollDetailPage({ params }: PageProps) {
             <Button
               variant="outline"
               size="sm"
-              className="border-dashed border-primary/30 hover:border-primary/50 text-xs gap-1.5 h-8"
+              className="border-dashed border-primary/30 hover:border-primary/50 text-xs gap-1.5 h-8 disabled:opacity-40"
               onClick={() => {
                 setTxType("deposit");
                 setTxBookmakerId("none");
                 setTxDialogOpen(true);
               }}
+              disabled={isArchived}
+              title={isArchived ? "Bankroll arquivado — sem movimentações" : undefined}
             >
               <Plus className="w-3.5 h-3.5" />
               Nova Transação
@@ -372,36 +520,38 @@ export default function BankrollDetailPage({ params }: PageProps) {
                     R$ {bancaLivre.toFixed(2)}
                   </p>
                 </div>
-                <div className="flex items-center gap-1 border-l border-border/30 pl-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 rounded-lg hover:bg-success/15 hover:text-success text-muted-foreground transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTxType("deposit");
-                      setTxBookmakerId("none");
-                      setTxDialogOpen(true);
-                    }}
-                    title="Depositar saldo livre"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 rounded-lg hover:bg-danger/15 hover:text-danger text-muted-foreground transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTxType("withdrawal");
-                      setTxBookmakerId("none");
-                      setTxDialogOpen(true);
-                    }}
-                    title="Sacar saldo livre"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
+                {!isArchived && (
+                  <div className="flex items-center gap-1 border-l border-border/30 pl-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 rounded-lg hover:bg-success/15 hover:text-success text-muted-foreground transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTxType("deposit");
+                        setTxBookmakerId("none");
+                        setTxDialogOpen(true);
+                      }}
+                      title="Depositar saldo livre"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 rounded-lg hover:bg-danger/15 hover:text-danger text-muted-foreground transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTxType("withdrawal");
+                        setTxBookmakerId("none");
+                        setTxDialogOpen(true);
+                      }}
+                      title="Sacar saldo livre"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -438,36 +588,38 @@ export default function BankrollDetailPage({ params }: PageProps) {
                     </p>
                     <p className="text-[10px] text-muted-foreground">disponível</p>
                   </div>
-                  <div className="flex items-center gap-1 border-l border-border/30 pl-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 rounded-lg hover:bg-success/15 hover:text-success text-muted-foreground transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTxType("deposit");
-                        setTxBookmakerId(item.bookmaker.id);
-                        setTxDialogOpen(true);
-                      }}
-                      title={`Depositar dinheiro na ${item.bookmaker.name}`}
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 rounded-lg hover:bg-danger/15 hover:text-danger text-muted-foreground transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTxType("withdrawal");
-                        setTxBookmakerId(item.bookmaker.id);
-                        setTxDialogOpen(true);
-                      }}
-                      title={`Sacar dinheiro da ${item.bookmaker.name}`}
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
+                  {!isArchived && (
+                    <div className="flex items-center gap-1 border-l border-border/30 pl-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 rounded-lg hover:bg-success/15 hover:text-success text-muted-foreground transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTxType("deposit");
+                          setTxBookmakerId(item.bookmaker.id);
+                          setTxDialogOpen(true);
+                        }}
+                        title={`Depositar dinheiro na ${item.bookmaker.name}`}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 rounded-lg hover:bg-danger/15 hover:text-danger text-muted-foreground transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTxType("withdrawal");
+                          setTxBookmakerId(item.bookmaker.id);
+                          setTxDialogOpen(true);
+                        }}
+                        title={`Sacar dinheiro da ${item.bookmaker.name}`}
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -499,15 +651,17 @@ export default function BankrollDetailPage({ params }: PageProps) {
         initialBookmakerId={txBookmakerId}
       />
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 lg:bottom-8 z-50">
-        <Button
-          size="lg"
-          className="rounded-full w-14 h-14 bg-gradient-action text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all"
-          onClick={() => setBetDialogOpen(true)}
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
-      </div>
+      {!isArchived && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 lg:bottom-8 z-50">
+          <Button
+            size="lg"
+            className="rounded-full w-14 h-14 bg-gradient-action text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all"
+            onClick={() => setBetDialogOpen(true)}
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

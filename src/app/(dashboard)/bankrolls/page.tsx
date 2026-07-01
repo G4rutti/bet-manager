@@ -16,7 +16,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Wallet, Clock, Settings } from "lucide-react";
+import { Plus, Wallet, Clock, Settings, Archive, ArchiveRestore } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import type { BankrollWithStats, Bookmaker } from "@/types";
 
@@ -64,6 +70,28 @@ export default function BankrollsPage() {
 
   const startingCapitalNum = parseFloat(formData.starting_capital) || 0;
   const remainingBalance = startingCapitalNum - totalAllocated;
+
+  const handleToggleArchive = async (bankrollId: string, currentStatus: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    const newStatus = currentStatus === "archived" ? "active" : "archived";
+    // Optimistic update
+    setBankrolls((prev) =>
+      prev.map((b) => b.id === bankrollId ? { ...b, status: newStatus as "active" | "archived" } : b)
+    );
+    const { error } = await supabase
+      .from("bankrolls")
+      .update({ status: newStatus })
+      .eq("id", bankrollId);
+    if (error) {
+      toast.error("Erro ao atualizar bankroll");
+      // Revert on error
+      setBankrolls((prev) =>
+        prev.map((b) => b.id === bankrollId ? { ...b, status: currentStatus as "active" | "archived" } : b)
+      );
+    } else {
+      toast.success(newStatus === "archived" ? "Bankroll arquivado!" : "Bankroll reativado!");
+    }
+  };
 
   const loadBankrolls = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -237,20 +265,43 @@ export default function BankrollsPage() {
               <Card className="stat-card cursor-pointer mb-4">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold">
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
                       {bankroll.name}
+                      {bankroll.status === "archived" && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
+                          <Archive className="w-2.5 h-2.5" />
+                          Arquivado
+                        </span>
+                      )}
                     </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        // TODO: settings
-                      }}
-                    >
-                      <Settings className="w-4 h-4 text-muted-foreground" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:bg-surface-hover"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <Settings className="w-4 h-4 text-muted-foreground" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-card border-border min-w-[180px]">
+                        <DropdownMenuItem
+                          className={`gap-2 cursor-pointer text-sm ${
+                            bankroll.status === "archived"
+                              ? "text-success focus:text-success focus:bg-success/10"
+                              : "text-warning focus:text-warning focus:bg-warning/10"
+                          }`}
+                          onClick={(e) => handleToggleArchive(bankroll.id, bankroll.status, e)}
+                        >
+                          {bankroll.status === "archived" ? (
+                            <><ArchiveRestore className="w-4 h-4" /> Reativar bankroll</>
+                          ) : (
+                            <><Archive className="w-4 h-4" /> Arquivar bankroll</>
+                          )}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
