@@ -22,9 +22,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, X, ChevronDown, ChevronUp, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Bookmaker, BetState, BetFormat } from "@/types";
+import { ForwardBetDialog } from "@/components/forms/ForwardBetDialog";
 
 interface BetFormDialogProps {
   bankrollId: string;
@@ -52,6 +53,7 @@ export function BetFormDialog({
   const [showMore, setShowMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [forwardDialogOpen, setForwardDialogOpen] = useState(false);
   const supabase = createClient();
 
   // Form state
@@ -720,18 +722,32 @@ export function BetFormDialog({
           {/* Submit / Action Buttons */}
           <div className="flex gap-2 w-full">
             {betToEdit && (
-              <Button
-                variant="destructive"
-                onClick={() => setDeleteDialogOpen(true)}
-                className="flex-1 bg-destructive text-destructive-foreground hover:opacity-90 py-5 font-semibold"
-                disabled={loading}
-              >
-                Excluir
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setForwardDialogOpen(true)}
+                  className="flex-1 border-border hover:bg-surface-hover py-5 font-semibold gap-1 text-xs"
+                  disabled={loading}
+                  title="Encaminhar aposta para outro bankroll"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-primary" />
+                  Encaminhar
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="flex-1 bg-destructive text-destructive-foreground hover:opacity-90 py-5 font-semibold text-xs"
+                  disabled={loading}
+                >
+                  Excluir
+                </Button>
+              </>
             )}
             <Button
               onClick={handleSubmit}
-              className="flex-[2] bg-gradient-action text-white hover:opacity-90 py-5 font-semibold"
+              className="flex-[2] bg-gradient-action text-white hover:opacity-90 py-5 font-semibold text-xs"
               disabled={loading}
             >
               {loading ? (
@@ -749,6 +765,19 @@ export function BetFormDialog({
         </div>
       </DialogContent>
     </Dialog>
+
+    {betToEdit && (
+      <ForwardBetDialog
+        currentBankrollId={bankrollId}
+        betsToForward={[betToEdit]}
+        open={forwardDialogOpen}
+        onOpenChange={setForwardDialogOpen}
+        onSuccess={() => {
+          onOpenChange(false);
+          onSaved();
+        }}
+      />
+    )}
 
     <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
       <DialogContent className="bg-card border-border max-w-md">

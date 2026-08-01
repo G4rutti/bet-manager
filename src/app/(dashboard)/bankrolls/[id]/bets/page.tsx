@@ -6,10 +6,26 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Search, SlidersHorizontal, X } from "lucide-react";
-import type { Bet } from "@/types";
+import { ArrowLeft, Plus, Search, SlidersHorizontal, X, Share2, CheckSquare, Square, CheckCircle2, Trash2, Loader2 } from "lucide-react";
+import type { Bet, BetState } from "@/types";
 import { BetFormDialog } from "@/components/forms/BetFormDialog";
+import { ForwardBetDialog } from "@/components/forms/ForwardBetDialog";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -52,6 +68,12 @@ export default function BetsListPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [betDialogOpen, setBetDialogOpen] = useState(false);
   const [selectedBet, setSelectedBet] = useState<any | null>(null);
+  const [forwardDialogOpen, setForwardDialogOpen] = useState(false);
+  const [betsToForward, setBetsToForward] = useState<Bet[]>([]);
+  const [selectedBetIds, setSelectedBetIds] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const supabase = createClient();
 
   // Filter States
@@ -293,6 +315,96 @@ export default function BetsListPage({ params }: PageProps) {
     return `${sign}${value.toFixed(2)} R$`;
   };
 
+  const handleSingleForward = (bet: Bet, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setBetsToForward([bet]);
+    setForwardDialogOpen(true);
+  };
+
+  const toggleSelectBet = (betId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = new Set(selectedBetIds);
+    if (next.has(betId)) {
+      next.delete(betId);
+    } else {
+      next.add(betId);
+    }
+    setSelectedBetIds(next);
+  };
+
+  const handleToggleAllSelection = () => {
+    if (selectedBetIds.size === sortedBets.length) {
+      setSelectedBetIds(new Set());
+    } else {
+      setSelectedBetIds(new Set(sortedBets.map((b) => b.id)));
+    }
+  };
+
+  const handleBulkForward = () => {
+    const selectedList = sortedBets.filter((b) => selectedBetIds.has(b.id));
+    if (selectedList.length === 0) return;
+    setBetsToForward(selectedList);
+    setForwardDialogOpen(true);
+  };
+
+  const calculateProfitLossForBet = (newState: BetState, stake: number, odds: number): number => {
+    if (newState === "won") return stake * (odds - 1);
+    if (newState === "lost") return -stake;
+    if (newState === "half_won") return (stake * (odds - 1)) / 2;
+    if (newState === "half_lost") return -stake / 2;
+    return 0;
+  };
+
+  const handleBulkStatusChange = async (newState: BetState) => {
+    const selectedBets = sortedBets.filter((b) => selectedBetIds.has(b.id));
+    if (selectedBets.length === 0) return;
+
+    setBulkUpdating(true);
+    let updatedCount = 0;
+
+    for (const bet of selectedBets) {
+      const newPL = calculateProfitLossForBet(newState, bet.stake, bet.odds);
+      const { error } = await supabase
+        .from("bets")
+        .update({ state: newState, profit_loss: newPL })
+        .eq("id", bet.id);
+
+      if (!error) {
+        await supabase
+          .from("selections")
+          .update({ state: newState })
+          .eq("bet_id", bet.id);
+        updatedCount++;
+      }
+    }
+
+    toast.success(`${updatedCount} aposta(s) alterada(s) para "${stateLabel(newState)}"!`);
+    setBulkUpdating(false);
+    setSelectedBetIds(new Set());
+    setSelectionMode(false);
+    loadBets();
+  };
+
+  const handleBulkDelete = async () => {
+    const selectedBets = sortedBets.filter((b) => selectedBetIds.has(b.id));
+    if (selectedBets.length === 0) return;
+
+    setBulkUpdating(true);
+    const ids = selectedBets.map((b) => b.id);
+    const { error } = await supabase.from("bets").delete().in("id", ids);
+
+    if (error) {
+      toast.error("Erro ao excluir apostas: " + error.message);
+    } else {
+      toast.success(`${ids.length} aposta(s) excluída(s) com sucesso!`);
+      setSelectedBetIds(new Set());
+      setSelectionMode(false);
+      loadBets();
+    }
+    setBulkUpdating(false);
+    setBulkDeleteDialogOpen(false);
+  };
+
   return (
     <div className="space-y-4 pb-20">
       {/* Header */}
@@ -305,7 +417,119 @@ export default function BetsListPage({ params }: PageProps) {
           </Link>
           <h1 className="text-xl font-bold">Apostas</h1>
         </div>
+
+        {/* Selection mode toggle button */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={selectionMode || selectedBetIds.size > 0 ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              const nextMode = !selectionMode;
+              setSelectionMode(nextMode);
+              if (!nextMode) setSelectedBetIds(new Set());
+            }}
+            className={`h-8 text-xs gap-1.5 ${
+              selectionMode || selectedBetIds.size > 0
+                ? "bg-primary/20 text-primary border-primary/40 hover:bg-primary/30"
+                : "border-border/80 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Ações em Lote</span>
+          </Button>
+        </div>
       </div>
+
+      {/* Selection Action Bar */}
+      {(selectionMode || selectedBetIds.size > 0) && (
+        <div className="flex flex-wrap items-center justify-between bg-primary/10 border border-primary/25 p-2.5 rounded-xl text-xs gap-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs px-2 hover:bg-primary/20"
+              onClick={handleToggleAllSelection}
+            >
+              {selectedBetIds.size === sortedBets.length && sortedBets.length > 0 ? "Desmarcar todas" : "Selecionar todas"}
+            </Button>
+            <span className="text-muted-foreground">
+              <strong className="text-primary font-bold">{selectedBetIds.size}</strong> de {sortedBets.length} selecionada(s)
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Bulk Status Change Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1 border-border/80 bg-background hover:bg-surface-hover"
+                  disabled={selectedBetIds.size === 0 || bulkUpdating}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                  Alterar Status
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-card border-border">
+                <DropdownMenuItem onClick={() => handleBulkStatusChange("won")}>
+                  <span className="text-success font-semibold">✓ Ganha</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkStatusChange("lost")}>
+                  <span className="text-danger font-semibold">✗ Perdida</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkStatusChange("pending")}>
+                  <span className="text-warning font-semibold">⧖ Pendente</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkStatusChange("refunded")}>
+                  <span className="text-muted-foreground font-semibold">↩ Reembolsada</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkStatusChange("half_won")}>
+                  <span className="text-success/70 font-semibold">½ Ganha</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkStatusChange("half_lost")}>
+                  <span className="text-danger/70 font-semibold">½ Perdida</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Bulk Forward Button */}
+            <Button
+              size="sm"
+              className="bg-gradient-action text-white hover:opacity-90 h-7 text-xs gap-1.5 font-medium shadow-sm"
+              onClick={handleBulkForward}
+              disabled={selectedBetIds.size === 0 || bulkUpdating}
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Encaminhar
+            </Button>
+
+            {/* Bulk Delete Button */}
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-7 text-xs gap-1 px-2.5"
+              onClick={() => setBulkDeleteDialogOpen(true)}
+              disabled={selectedBetIds.size === 0 || bulkUpdating}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Excluir
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setSelectionMode(false);
+                setSelectedBetIds(new Set());
+              }}
+              disabled={bulkUpdating}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Filters Section */}
       <div className="space-y-3">
@@ -699,74 +923,108 @@ export default function BetsListPage({ params }: PageProps) {
                     </div>
 
                     {/* Bet Cards */}
-                    {dayData.bets.map((bet) => (
-                      <Card
-                        key={bet.id}
-                        className="stat-card overflow-hidden cursor-pointer hover:border-primary/30 transition-colors"
-                        onClick={() => {
-                          setSelectedBet(bet);
-                          setBetDialogOpen(true);
-                        }}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                <span className="text-xs text-muted-foreground font-mono">
-                                  {formatTime(parseDate(bet.bet_date))}
-                                </span>
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] px-1.5 py-0"
+                    {dayData.bets.map((bet) => {
+                      const isSelected = selectedBetIds.has(bet.id);
+                      return (
+                        <Card
+                          key={bet.id}
+                          className={`stat-card overflow-hidden cursor-pointer transition-all ${
+                            isSelected
+                              ? "border-primary bg-primary/5 shadow-sm"
+                              : "hover:border-primary/30"
+                          }`}
+                          onClick={(e) => {
+                            if (selectionMode || selectedBetIds.size > 0) {
+                              toggleSelectBet(bet.id, e);
+                            } else {
+                              setSelectedBet(bet);
+                              setBetDialogOpen(true);
+                            }
+                          }}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              {(selectionMode || selectedBetIds.size > 0) && (
+                                <div
+                                  className="pt-0.5 pr-1 flex-shrink-0 cursor-pointer"
+                                  onClick={(e) => toggleSelectBet(bet.id, e)}
                                 >
-                                  {bet.bet_format === "simple"
-                                    ? "Simple"
-                                    : bet.bet_format === "back"
-                                    ? "Back"
-                                    : "Lay"}
-                                </Badge>
-                                {bet.bookmaker && (
+                                  {isSelected ? (
+                                    <CheckSquare className="w-4 h-4 text-primary" />
+                                  ) : (
+                                    <Square className="w-4 h-4 text-muted-foreground" />
+                                  )}
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                  <span className="text-xs text-muted-foreground font-mono">
+                                    {formatTime(parseDate(bet.bet_date))}
+                                  </span>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[10px] px-1.5 py-0"
+                                  >
+                                    {bet.bet_format === "simple"
+                                      ? "Simple"
+                                      : bet.bet_format === "back"
+                                      ? "Back"
+                                      : "Lay"}
+                                  </Badge>
+                                  {bet.bookmaker && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px] px-1.5 py-0 border-primary/30 text-primary"
+                                    >
+                                      {bet.bookmaker.name}
+                                    </Badge>
+                                  )}
                                   <Badge
                                     variant="outline"
-                                    className="text-[10px] px-1.5 py-0 border-primary/30 text-primary"
+                                    className={`text-[10px] px-1.5 py-0 ${
+                                      bet.stake_source === "free_balance"
+                                        ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                                        : "border-sky-500/30 text-sky-500 bg-sky-500/10"
+                                    }`}
                                   >
-                                    {bet.bookmaker.name}
+                                    {bet.stake_source === "free_balance" ? "💼 Livre" : "🏦 Casa"}
                                   </Badge>
-                                )}
-                                <Badge
-                                  variant="outline"
-                                  className={`text-[10px] px-1.5 py-0 ${
-                                    bet.stake_source === "free_balance"
-                                      ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
-                                      : "border-sky-500/30 text-sky-500 bg-sky-500/10"
-                                  }`}
+                                </div>
+                                <p className="text-sm font-medium truncate">
+                                  {bet.label}
+                                </p>
+                                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                  <span>Odds: {bet.odds.toFixed(2)}</span>
+                                  <span>Stake: R$ {bet.stake.toFixed(2)}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                  onClick={(e) => handleSingleForward(bet, e)}
+                                  title="Encaminhar aposta para outro bankroll"
                                 >
-                                  {bet.stake_source === "free_balance" ? "💼 Livre" : "🏦 Casa"}
-                                </Badge>
-                              </div>
-                              <p className="text-sm font-medium truncate">
-                                {bet.label}
-                              </p>
-                              <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                <span>Odds: {bet.odds.toFixed(2)}</span>
-                                <span>Stake: R$ {bet.stake.toFixed(2)}</span>
+                                  <Share2 className="w-3.5 h-3.5" />
+                                </Button>
+                                <div className="text-right">
+                                  <span
+                                    className={`text-sm font-bold writing-mode-vertical ${stateColor(bet.state)}`}
+                                    style={{
+                                      writingMode: "vertical-rl",
+                                      textOrientation: "mixed",
+                                    }}
+                                  >
+                                    {stateLabel(bet.state)}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                            <div className="text-right flex-shrink-0">
-                              <span
-                                className={`text-sm font-bold writing-mode-vertical ${stateColor(bet.state)}`}
-                                style={{
-                                  writingMode: "vertical-rl",
-                                  textOrientation: "mixed",
-                                }}
-                              >
-                                {stateLabel(bet.state)}
-                              </span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 ))}
               </div>
@@ -786,6 +1044,53 @@ export default function BetsListPage({ params }: PageProps) {
         onSaved={loadBets}
         betToEdit={selectedBet}
       />
+
+      <ForwardBetDialog
+        currentBankrollId={id}
+        betsToForward={betsToForward}
+        open={forwardDialogOpen}
+        onOpenChange={setForwardDialogOpen}
+        onSuccess={() => {
+          setSelectedBetIds(new Set());
+          setSelectionMode(false);
+          loadBets();
+        }}
+      />
+
+      <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <DialogContent className="bg-card border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle>Excluir Apostas em Massa</DialogTitle>
+            <DialogDescription>
+              Você tem certeza que deseja excluir <strong className="text-foreground">{selectedBetIds.size} aposta(s)</strong> selecionada(s)? Esta ação não poderá ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkDeleteDialogOpen(false)}
+              disabled={bulkUpdating}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              disabled={bulkUpdating}
+              className="gap-1.5"
+            >
+              {bulkUpdating ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+              Confirmar Exclusão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <Button
