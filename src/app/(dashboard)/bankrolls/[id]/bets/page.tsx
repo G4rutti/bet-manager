@@ -6,7 +6,29 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Search, SlidersHorizontal, X, Share2, CheckSquare, Square, CheckCircle2, Trash2, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  X,
+  Share2,
+  CheckSquare,
+  Square,
+  CheckCircle2,
+  Trash2,
+  Loader2,
+  XCircle,
+  Clock,
+  Undo2,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  Target,
+  DollarSign,
+  Wallet,
+  Landmark,
+} from "lucide-react";
 import type { Bet, BetState } from "@/types";
 import { BetFormDialog } from "@/components/forms/BetFormDialog";
 import { ForwardBetDialog } from "@/components/forms/ForwardBetDialog";
@@ -470,18 +492,26 @@ export default function BetsListPage({ params }: PageProps) {
                   Alterar Status
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-card border-border">
+              <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => handleBulkStatusChange("won")}>
-                  <span className="text-success font-semibold">✓ Ganha</span>
+                  <span className="flex items-center gap-1.5 text-success font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Ganha
+                  </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleBulkStatusChange("lost")}>
-                  <span className="text-danger font-semibold">✗ Perdida</span>
+                  <span className="flex items-center gap-1.5 text-danger font-semibold">
+                    <XCircle className="w-3.5 h-3.5" /> Perdida
+                  </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleBulkStatusChange("pending")}>
-                  <span className="text-warning font-semibold">⧖ Pendente</span>
+                  <span className="flex items-center gap-1.5 text-warning font-semibold">
+                    <Clock className="w-3.5 h-3.5" /> Pendente
+                  </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleBulkStatusChange("refunded")}>
-                  <span className="text-muted-foreground font-semibold">↩ Reembolsada</span>
+                  <span className="flex items-center gap-1.5 text-muted-foreground font-semibold">
+                    <Undo2 className="w-3.5 h-3.5" /> Reembolsada
+                  </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleBulkStatusChange("half_won")}>
                   <span className="text-success/70 font-semibold">½ Ganha</span>
@@ -495,7 +525,7 @@ export default function BetsListPage({ params }: PageProps) {
             {/* Bulk Forward Button */}
             <Button
               size="sm"
-              className="bg-gradient-action text-white hover:opacity-90 h-7 text-xs gap-1.5 font-medium shadow-sm"
+              className="bg-brand text-white hover:opacity-90 h-7 text-xs gap-1.5 font-medium shadow-sm"
               onClick={handleBulkForward}
               disabled={selectedBetIds.size === 0 || bulkUpdating}
             >
@@ -604,7 +634,7 @@ export default function BetsListPage({ params }: PageProps) {
 
         {/* Advanced Filters Expandable Panel */}
         {showAdvanced && (
-          <Card className="stat-card glass-card border-primary/20 p-4 space-y-4 animate-in fade-in-50 slide-in-from-top-3 duration-200">
+          <Card className="stat-card highlight-card border-primary/20 p-4 space-y-4 animate-in fade-in-50 slide-in-from-top-3 duration-200">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {/* Bookmaker Selector */}
               <div className="space-y-1.5">
@@ -733,14 +763,30 @@ export default function BetsListPage({ params }: PageProps) {
                     <SelectValue placeholder="Data (Mais recente)" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
-                    <SelectItem value="date_desc">📅 Data (Mais recente)</SelectItem>
-                    <SelectItem value="date_asc">📅 Data (Mais antiga)</SelectItem>
-                    <SelectItem value="profit_desc">📈 Lucro (Maior primeiro)</SelectItem>
-                    <SelectItem value="profit_asc">📉 Lucro (Menor primeiro)</SelectItem>
-                    <SelectItem value="odds_desc">🎯 Odds (Maior primeiro)</SelectItem>
-                    <SelectItem value="odds_asc">🎯 Odds (Menor primeiro)</SelectItem>
-                    <SelectItem value="stake_desc">💰 Stake (Maior primeiro)</SelectItem>
-                    <SelectItem value="stake_asc">💰 Stake (Menor primeiro)</SelectItem>
+                    <SelectItem value="date_desc">
+                      <Calendar className="w-3.5 h-3.5" /> Data (Mais recente)
+                    </SelectItem>
+                    <SelectItem value="date_asc">
+                      <Calendar className="w-3.5 h-3.5" /> Data (Mais antiga)
+                    </SelectItem>
+                    <SelectItem value="profit_desc">
+                      <TrendingUp className="w-3.5 h-3.5" /> Lucro (Maior primeiro)
+                    </SelectItem>
+                    <SelectItem value="profit_asc">
+                      <TrendingDown className="w-3.5 h-3.5" /> Lucro (Menor primeiro)
+                    </SelectItem>
+                    <SelectItem value="odds_desc">
+                      <Target className="w-3.5 h-3.5" /> Odds (Maior primeiro)
+                    </SelectItem>
+                    <SelectItem value="odds_asc">
+                      <Target className="w-3.5 h-3.5" /> Odds (Menor primeiro)
+                    </SelectItem>
+                    <SelectItem value="stake_desc">
+                      <DollarSign className="w-3.5 h-3.5" /> Stake (Maior primeiro)
+                    </SelectItem>
+                    <SelectItem value="stake_asc">
+                      <DollarSign className="w-3.5 h-3.5" /> Stake (Menor primeiro)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -850,7 +896,7 @@ export default function BetsListPage({ params }: PageProps) {
               Nenhuma aposta registrada
             </p>
             <Button
-              className="bg-gradient-action text-white hover:opacity-90"
+              className="bg-brand text-white hover:opacity-90"
               onClick={() => setBetDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -983,11 +1029,19 @@ export default function BetsListPage({ params }: PageProps) {
                                     variant="outline"
                                     className={`text-[10px] px-1.5 py-0 ${
                                       bet.stake_source === "free_balance"
-                                        ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
-                                        : "border-sky-500/30 text-sky-500 bg-sky-500/10"
+                                        ? "border-warning/30 text-warning bg-warning/10"
+                                        : "border-chart-4/30 text-chart-4 bg-chart-4/10"
                                     }`}
                                   >
-                                    {bet.stake_source === "free_balance" ? "💼 Livre" : "🏦 Casa"}
+                                    {bet.stake_source === "free_balance" ? (
+                                      <>
+                                        <Wallet className="w-2.5 h-2.5" /> Livre
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Landmark className="w-2.5 h-2.5" /> Casa
+                                      </>
+                                    )}
                                   </Badge>
                                 </div>
                                 <p className="text-sm font-medium truncate">
@@ -1095,7 +1149,7 @@ export default function BetsListPage({ params }: PageProps) {
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <Button
           size="lg"
-          className="rounded-full w-14 h-14 bg-gradient-action text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all"
+          className="rounded-full w-14 h-14 bg-brand text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-105 transition-all"
           onClick={() => {
             setSelectedBet(null);
             setBetDialogOpen(true);

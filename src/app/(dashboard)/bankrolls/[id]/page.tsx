@@ -4,23 +4,23 @@ import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   Minus,
   BarChart3,
   CalendarDays,
-  ListOrdered,
   ArrowLeft,
   ChevronRight,
-  HelpCircle,
   History,
   FileSpreadsheet,
   Loader2,
   Archive,
   ArchiveRestore,
   AlertTriangle,
+  Wallet,
+  Landmark,
 } from "lucide-react";
 import {
   Dialog,
@@ -31,7 +31,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Bankroll, Bet, Bookmaker } from "@/types";
 import { ProfitChart } from "@/components/charts/ProfitChart";
 import { calculateProfitTimeline } from "@/lib/calculations/statistics";
@@ -280,7 +279,7 @@ export default function BankrollDetailPage({ params }: PageProps) {
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 border-border/80 bg-card hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-400 transition-all h-9 px-3 text-xs font-medium"
+            className="flex items-center gap-2 border-border/80 bg-card hover:bg-success/10 hover:border-success/40 hover:text-success transition-all h-9 px-3 text-xs font-medium"
             onClick={handleExportExcel}
             disabled={exporting}
             title="Exportar dados do bankroll como Excel"
@@ -375,7 +374,7 @@ export default function BankrollDetailPage({ params }: PageProps) {
       </Dialog>
 
       {/* Chart */}
-      <div className="bg-gradient-green rounded-2xl p-4 relative overflow-hidden">
+      <div className="stat-card rounded-2xl p-4">
         <div className="h-[250px]">
           <ProfitChart data={filteredTimeline} />
         </div>
@@ -385,8 +384,8 @@ export default function BankrollDetailPage({ params }: PageProps) {
               key={range}
               variant="ghost"
               size="sm"
-              className={`text-white/80 hover:text-white hover:bg-white/20 text-xs px-3 h-7 rounded-full ${
-                timeRange === range ? "bg-white/20 text-white" : ""
+              className={`text-muted-foreground hover:text-foreground hover:bg-surface-hover text-xs px-3 h-7 rounded-full ${
+                timeRange === range ? "bg-primary/10 text-primary" : ""
               }`}
               onClick={() => setTimeRange(range)}
             >
@@ -506,8 +505,8 @@ export default function BankrollDetailPage({ params }: PageProps) {
             {/* Banca livre row - never-bet money */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-surface/50 border border-border/40 hover:border-primary/10 transition-colors">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm">
-                  💼
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Wallet className="w-4 h-4 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Banca Livre</p>
@@ -562,8 +561,8 @@ export default function BankrollDetailPage({ params }: PageProps) {
                 className="flex items-center justify-between p-3 rounded-xl bg-surface/50 border border-border/40 hover:border-primary/10 transition-all duration-200"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground text-sm font-semibold border border-border/30">
-                    🏦
+                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground border border-border/30">
+                    <Landmark className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="text-sm font-medium">{item.bookmaker.name}</p>
@@ -655,7 +654,7 @@ export default function BankrollDetailPage({ params }: PageProps) {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 lg:bottom-8 z-50">
           <Button
             size="lg"
-            className="rounded-full w-14 h-14 bg-gradient-action text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105 transition-all"
+            className="rounded-full w-14 h-14 bg-brand text-white shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-105 transition-all"
             onClick={() => setBetDialogOpen(true)}
           >
             <Plus className="w-6 h-6" />
@@ -666,37 +665,3 @@ export default function BankrollDetailPage({ params }: PageProps) {
   );
 }
 
-function StatCard({
-  label,
-  value,
-  color = "text-foreground",
-  tooltip,
-}: {
-  label: string;
-  value: string;
-  color?: string;
-  tooltip?: string;
-}) {
-  return (
-    <Card className="stat-card">
-      <CardContent className="p-4 text-center">
-        <div className="flex items-center justify-center gap-1 mb-1">
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
-            {label}
-          </p>
-          {tooltip && (
-            <Tooltip>
-              <TooltipTrigger>
-                <HelpCircle className="w-3 h-3 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">{tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-        <p className={`text-xl font-bold tabular-nums ${color}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}

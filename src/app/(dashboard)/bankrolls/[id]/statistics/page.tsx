@@ -3,11 +3,10 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, HelpCircle, TrendingUp, TrendingDown } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArrowLeft } from "lucide-react";
+import { StatCard, type StatCardProps } from "@/components/ui/stat-card";
 import type { Bankroll, Bet, BankrollTransaction, BankrollStats, CLVStats } from "@/types";
 import { calculateBankrollStats } from "@/lib/calculations/statistics";
 import { calculateCLVStats } from "@/lib/calculations/clv";
@@ -332,37 +331,6 @@ export default function StatisticsPage({ params }: PageProps) {
   );
 }
 
-function StatItem({
-  label,
-  value,
-  color = "text-foreground",
-  tooltip,
-}: {
-  label: string;
-  value: string;
-  color?: string;
-  tooltip?: string;
-}) {
-  return (
-    <Card className="stat-card">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-1 mb-1">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-            {label}
-          </p>
-          {tooltip && (
-            <Tooltip>
-              <TooltipTrigger>
-                <HelpCircle className="w-3 h-3 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[200px]">
-                <p className="text-xs">{tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-        <p className={`text-lg font-bold tabular-nums ${color}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
+function StatItem(props: Omit<StatCardProps, "size">) {
+  return <StatCard {...props} size="sm" />;
 }

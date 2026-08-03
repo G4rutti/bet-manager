@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowDownToLine, ArrowUpFromLine, Repeat, Wallet, Landmark } from "lucide-react";
 import { toast } from "sonner";
 import type { Bookmaker } from "@/types";
 
@@ -198,7 +198,7 @@ export function TransactionFormDialog({
                 }
                 onClick={() => setType("deposit")}
               >
-                📥 Depósito
+                <ArrowDownToLine className="w-4 h-4" /> Depósito
               </Button>
               <Button
                 variant={type === "withdrawal" ? "default" : "outline"}
@@ -209,7 +209,7 @@ export function TransactionFormDialog({
                 }
                 onClick={() => setType("withdrawal")}
               >
-                📤 Saque
+                <ArrowUpFromLine className="w-4 h-4" /> Saque
               </Button>
               <Button
                 variant={type === "transfer" ? "default" : "outline"}
@@ -220,7 +220,7 @@ export function TransactionFormDialog({
                 }
                 onClick={() => setType("transfer")}
               >
-                🔁 Transferir
+                <Repeat className="w-4 h-4" /> Transferir
               </Button>
             </div>
           </div>
@@ -274,10 +274,12 @@ export function TransactionFormDialog({
                       <SelectValue placeholder="Selecione a origem" />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border max-h-60 overflow-y-auto">
-                      <SelectItem value="free">💼 Saldo Livre</SelectItem>
+                      <SelectItem value="free">
+                        <Wallet className="w-3.5 h-3.5" /> Saldo Livre
+                      </SelectItem>
                       {bookmakers.map((bm) => (
                         <SelectItem key={bm.id} value={bm.id}>
-                          🏦 {bm.name}
+                          <Landmark className="w-3.5 h-3.5" /> {bm.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -297,10 +299,12 @@ export function TransactionFormDialog({
                       <SelectValue placeholder="Selecione o destino" />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border max-h-60 overflow-y-auto">
-                      <SelectItem value="free">💼 Saldo Livre</SelectItem>
+                      <SelectItem value="free">
+                        <Wallet className="w-3.5 h-3.5" /> Saldo Livre
+                      </SelectItem>
                       {bookmakers.map((bm) => (
                         <SelectItem key={bm.id} value={bm.id}>
-                          🏦 {bm.name}
+                          <Landmark className="w-3.5 h-3.5" /> {bm.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -325,10 +329,12 @@ export function TransactionFormDialog({
                   <SelectValue placeholder="Saldo Livre (Sobrando)" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border max-h-60 overflow-y-auto">
-                  <SelectItem value="none">💼 Nenhuma (Saldo Livre)</SelectItem>
+                  <SelectItem value="none">
+                    <Wallet className="w-3.5 h-3.5" /> Nenhuma (Saldo Livre)
+                  </SelectItem>
                   {bookmakers.map((bm) => (
                     <SelectItem key={bm.id} value={bm.id}>
-                      🏦 {bm.name}
+                      <Landmark className="w-3.5 h-3.5" /> {bm.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -365,7 +371,7 @@ export function TransactionFormDialog({
             </Button>
             <Button
               onClick={handleSubmit}
-              className="flex-2 bg-gradient-action text-white hover:opacity-90 font-semibold"
+              className="flex-2 bg-brand text-white hover:opacity-90 font-semibold"
               disabled={
                 loading || (type === "transfer" && sourceId === destId)
               }

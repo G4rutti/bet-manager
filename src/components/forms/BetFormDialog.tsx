@@ -22,7 +22,22 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, ChevronDown, ChevronUp, Share2 } from "lucide-react";
+import {
+  Plus,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Share2,
+  Target,
+  ArrowUp,
+  ArrowDown,
+  Landmark,
+  Wallet,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Undo2,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { Bookmaker, BetState, BetFormat } from "@/types";
 import { ForwardBetDialog } from "@/components/forms/ForwardBetDialog";
@@ -555,11 +570,19 @@ export function BetFormDialog({
                   }
                   onClick={() => setBetFormat(format)}
                 >
-                  {format === "simple"
-                    ? "🎯 Simple"
-                    : format === "back"
-                    ? "⬆ Back"
-                    : "⬇ Lay"}
+                  {format === "simple" ? (
+                    <>
+                      <Target className="w-3.5 h-3.5" /> Simple
+                    </>
+                  ) : format === "back" ? (
+                    <>
+                      <ArrowUp className="w-3.5 h-3.5" /> Back
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDown className="w-3.5 h-3.5" /> Lay
+                    </>
+                  )}
                 </Button>
               ))}
             </div>
@@ -582,7 +605,7 @@ export function BetFormDialog({
                 }`}
                 onClick={() => setStakeSource("bookmaker")}
               >
-                🏦 Saldo da Casa (Bookmaker)
+                <Landmark className="w-3.5 h-3.5" /> Saldo da Casa (Bookmaker)
               </Button>
               <Button
                 type="button"
@@ -595,7 +618,7 @@ export function BetFormDialog({
                 }`}
                 onClick={() => setStakeSource("free_balance")}
               >
-                💼 Banca Livre (Saldo Livre)
+                <Wallet className="w-3.5 h-3.5" /> Banca Livre (Saldo Livre)
               </Button>
             </div>
           </div>
@@ -627,10 +650,18 @@ export function BetFormDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
-                  <SelectItem value="pending">⏳ Pendente</SelectItem>
-                  <SelectItem value="won">✅ Ganhou</SelectItem>
-                  <SelectItem value="lost">❌ Perdeu</SelectItem>
-                  <SelectItem value="refunded">↩ Reembolso</SelectItem>
+                  <SelectItem value="pending">
+                    <Clock className="w-3.5 h-3.5 text-warning" /> Pendente
+                  </SelectItem>
+                  <SelectItem value="won">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Ganhou
+                  </SelectItem>
+                  <SelectItem value="lost">
+                    <XCircle className="w-3.5 h-3.5 text-danger" /> Perdeu
+                  </SelectItem>
+                  <SelectItem value="refunded">
+                    <Undo2 className="w-3.5 h-3.5 text-muted-foreground" /> Reembolso
+                  </SelectItem>
                   <SelectItem value="half_won">½ Meio ganho</SelectItem>
                   <SelectItem value="half_lost">½ Meio perdido</SelectItem>
                 </SelectContent>
@@ -747,7 +778,7 @@ export function BetFormDialog({
             )}
             <Button
               onClick={handleSubmit}
-              className="flex-[2] bg-gradient-action text-white hover:opacity-90 py-5 font-semibold text-xs"
+              className="flex-[2] bg-brand text-white hover:opacity-90 py-5 font-semibold text-xs"
               disabled={loading}
             >
               {loading ? (

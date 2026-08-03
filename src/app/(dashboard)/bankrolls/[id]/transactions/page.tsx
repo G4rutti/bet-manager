@@ -22,7 +22,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Search, SlidersHorizontal, Trash2, X, History, TrendingUp, Wallet } from "lucide-react";
+import {
+  ArrowLeft,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+  X,
+  History,
+  Wallet,
+  Landmark,
+  Repeat,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { Bookmaker, BankrollTransaction } from "@/types";
 
@@ -225,21 +237,21 @@ export default function TransactionsListPage({ params }: PageProps) {
   const getTransactionBadge = (tx: BankrollTransaction) => {
     if (isTransfer(tx)) {
       return (
-        <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 font-semibold px-2 py-0.5 rounded-full text-[10px]">
-          🔁 Transferência
+        <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/20 font-semibold px-2 py-0.5 rounded-full text-[10px]">
+          <Repeat className="w-2.5 h-2.5" /> Transferência
         </Badge>
       );
     }
     if (tx.type === "deposit") {
       return (
         <Badge className="bg-success/15 text-success border-success/20 font-semibold px-2 py-0.5 rounded-full text-[10px]">
-          📥 Depósito
+          <ArrowDownToLine className="w-2.5 h-2.5" /> Depósito
         </Badge>
       );
     }
     return (
       <Badge className="bg-danger/15 text-danger border-danger/20 font-semibold px-2 py-0.5 rounded-full text-[10px]">
-        📤 Saque
+        <ArrowUpFromLine className="w-2.5 h-2.5" /> Saque
       </Badge>
     );
   };
@@ -296,7 +308,7 @@ export default function TransactionsListPage({ params }: PageProps) {
         </div>
 
         {showFilters && (
-          <Card className="stat-card glass-card border-primary/20 p-4 space-y-4 animate-in fade-in-50 slide-in-from-top-3 duration-200">
+          <Card className="stat-card highlight-card border-primary/20 p-4 space-y-4 animate-in fade-in-50 slide-in-from-top-3 duration-200">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Type Filter */}
               <div className="space-y-1.5">
@@ -307,9 +319,15 @@ export default function TransactionsListPage({ params }: PageProps) {
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
                     <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="deposit">📥 Apenas Depósitos</SelectItem>
-                    <SelectItem value="withdrawal">📤 Apenas Saques</SelectItem>
-                    <SelectItem value="transfer">🔁 Apenas Transferências</SelectItem>
+                    <SelectItem value="deposit">
+                      <ArrowDownToLine className="w-3.5 h-3.5" /> Apenas Depósitos
+                    </SelectItem>
+                    <SelectItem value="withdrawal">
+                      <ArrowUpFromLine className="w-3.5 h-3.5" /> Apenas Saques
+                    </SelectItem>
+                    <SelectItem value="transfer">
+                      <Repeat className="w-3.5 h-3.5" /> Apenas Transferências
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -323,10 +341,12 @@ export default function TransactionsListPage({ params }: PageProps) {
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border max-h-60 overflow-y-auto">
                     <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="free">💼 Saldo Livre</SelectItem>
+                    <SelectItem value="free">
+                      <Wallet className="w-3.5 h-3.5" /> Saldo Livre
+                    </SelectItem>
                     {bookmakers.map((bm) => (
                       <SelectItem key={bm.id} value={bm.id}>
-                        🏦 {bm.name}
+                        <Landmark className="w-3.5 h-3.5" /> {bm.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -443,7 +463,7 @@ export default function TransactionsListPage({ params }: PageProps) {
                         <span
                           className={`font-mono text-sm font-bold ${
                             isTransfer(tx)
-                              ? "text-indigo-400"
+                              ? "text-chart-2"
                               : tx.type === "deposit"
                               ? "text-success"
                               : "text-danger"

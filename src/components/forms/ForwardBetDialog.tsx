@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Share2, Loader2 } from "lucide-react";
+import { Share2, Loader2, Landmark, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import type { Bankroll, Bet, BetState, Bookmaker } from "@/types";
 
@@ -285,7 +285,7 @@ export function ForwardBetDialog({
                 <SelectContent className="bg-card border-border">
                   {bankrolls.map((b) => (
                     <SelectItem key={b.id} value={b.id}>
-                      🏦 {b.name} (Capital R$ {b.starting_capital.toFixed(2)})
+                      <Landmark className="w-3.5 h-3.5" /> {b.name} (Capital R$ {b.starting_capital.toFixed(2)})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -335,8 +335,12 @@ export function ForwardBetDialog({
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border">
                     <SelectItem value="same">Manter mesma</SelectItem>
-                    <SelectItem value="free_balance">💼 Saldo Livre</SelectItem>
-                    <SelectItem value="bookmaker">🏦 Casa de Apostas</SelectItem>
+                    <SelectItem value="free_balance">
+                      <Wallet className="w-3.5 h-3.5" /> Saldo Livre
+                    </SelectItem>
+                    <SelectItem value="bookmaker">
+                      <Landmark className="w-3.5 h-3.5" /> Casa de Apostas
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -372,7 +376,7 @@ export function ForwardBetDialog({
             type="button"
             onClick={handleForward}
             disabled={loading || bankrolls.length === 0 || !targetBankrollId}
-            className="bg-gradient-action text-white hover:opacity-90 text-xs gap-1.5"
+            className="bg-brand text-white hover:opacity-90 text-xs gap-1.5"
           >
             {loading ? (
               <>

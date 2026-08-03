@@ -365,7 +365,7 @@ export default function BankrollsPage() {
                 </CardContent>
               </Card>
             </DialogTrigger>
-            <DialogContent className="bg-card border-border">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Novo Bankroll</DialogTitle>
                 <DialogDescription>
@@ -515,7 +515,7 @@ export default function BankrollsPage() {
                   </Button>
                   <Button
                     onClick={handleCreate}
-                    className="bg-gradient-action text-white hover:opacity-90"
+                    className="bg-brand text-white hover:opacity-90"
                     disabled={showAllocations && remainingBalance < 0}
                   >
                     Criar Bankroll
@@ -528,7 +528,7 @@ export default function BankrollsPage() {
       )}
 
       {/* Bottom bar for mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-gradient-action">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-brand">
         <Button
           className="w-full text-white font-semibold py-6 bg-transparent hover:bg-white/10"
           onClick={() => setDialogOpen(true)}

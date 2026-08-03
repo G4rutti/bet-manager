@@ -4,18 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Plus,
-  Wallet,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  DollarSign,
-  Target,
-  Clock,
-} from "lucide-react";
+import { Plus, Wallet, DollarSign, Target, Clock } from "lucide-react";
 import type { BankrollWithStats } from "@/types";
 
 export default function DashboardPage() {
@@ -87,7 +79,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <Link href="/bankrolls">
-          <Button className="bg-gradient-action text-white hover:opacity-90">
+          <Button className="bg-brand text-white hover:opacity-90">
             <Plus className="w-4 h-4 mr-2" />
             Novo Bankroll
           </Button>
@@ -96,63 +88,33 @@ export default function DashboardPage() {
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="stat-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Lucro Total</p>
-                <p className={`text-lg font-bold tabular-nums ${totalProfits >= 0 ? "text-success" : "text-danger"}`}>
-                  {totalProfits >= 0 ? "+" : ""}R$ {totalProfits.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="stat-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-chart-2/10 flex items-center justify-center">
-                <Target className="w-5 h-5 text-chart-2" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total Apostas</p>
-                <p className="text-lg font-bold tabular-nums">{totalBets}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="stat-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Pendentes</p>
-                <p className="text-lg font-bold tabular-nums">{totalPending}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="stat-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-                <Wallet className="w-5 h-5 text-success" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Bankrolls Ativos</p>
-                <p className="text-lg font-bold tabular-nums">{activeBankrolls}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          label="Lucro Total"
+          value={`${totalProfits >= 0 ? "+" : ""}R$ ${totalProfits.toFixed(2)}`}
+          color={totalProfits >= 0 ? "text-success" : "text-danger"}
+          icon={DollarSign}
+        />
+        <StatCard
+          label="Total Apostas"
+          value={totalBets.toString()}
+          icon={Target}
+          iconBgClassName="bg-chart-2/10"
+          iconColorClassName="text-chart-2"
+        />
+        <StatCard
+          label="Pendentes"
+          value={totalPending.toString()}
+          icon={Clock}
+          iconBgClassName="bg-warning/10"
+          iconColorClassName="text-warning"
+        />
+        <StatCard
+          label="Bankrolls Ativos"
+          value={activeBankrolls.toString()}
+          icon={Wallet}
+          iconBgClassName="bg-success/10"
+          iconColorClassName="text-success"
+        />
       </div>
 
       {/* Bankrolls List */}
@@ -181,7 +143,7 @@ export default function DashboardPage() {
                 Crie seu primeiro bankroll para começar a rastrear suas apostas
               </p>
               <Link href="/bankrolls">
-                <Button className="bg-gradient-action text-white hover:opacity-90">
+                <Button className="bg-brand text-white hover:opacity-90">
                   <Plus className="w-4 h-4 mr-2" />
                   Criar Bankroll
                 </Button>

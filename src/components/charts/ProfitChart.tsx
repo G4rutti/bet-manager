@@ -39,13 +39,13 @@ export function ProfitChart({ data }: ProfitChartProps) {
       {
         label: "Lucro Acumulado",
         data: data.map((d) => d.cumulativeProfit),
-        borderColor: "#ffffff",
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        borderColor: "#2f9e8f",
+        backgroundColor: "rgba(47, 158, 143, 0.12)",
         borderWidth: 2.5,
         pointRadius: 0,
         pointHoverRadius: 5,
-        pointHoverBackgroundColor: "#ffffff",
-        pointHoverBorderColor: "#ffffff",
+        pointHoverBackgroundColor: "#2f9e8f",
+        pointHoverBorderColor: "#e9eaec",
         fill: true,
         tension: 0.4,
       },
@@ -62,7 +62,11 @@ export function ProfitChart({ data }: ProfitChartProps) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        backgroundColor: "#1d1f22",
+        borderColor: "#2a2c30",
+        borderWidth: 1,
+        titleColor: "#e9eaec",
+        bodyColor: "#e9eaec",
         padding: 12,
         titleFont: { size: 12 },
         bodyFont: { size: 14, weight: "bold" as const },
@@ -80,7 +84,7 @@ export function ProfitChart({ data }: ProfitChartProps) {
         display: true,
         grid: { display: false },
         ticks: {
-          color: "rgba(255, 255, 255, 0.6)",
+          color: "#8b8d93",
           font: { size: 10 },
           maxTicksLimit: 6,
         },
@@ -89,10 +93,10 @@ export function ProfitChart({ data }: ProfitChartProps) {
       y: {
         display: true,
         grid: {
-          color: "rgba(255, 255, 255, 0.1)",
+          color: "rgba(233, 234, 236, 0.08)",
         },
         ticks: {
-          color: "rgba(255, 255, 255, 0.6)",
+          color: "#8b8d93",
           font: { size: 10 },
           callback: (value: string | number) => `R$ ${value}`,
         },
@@ -103,7 +107,7 @@ export function ProfitChart({ data }: ProfitChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-white/60 text-sm">
+      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
         Sem dados para exibir
       </div>
     );

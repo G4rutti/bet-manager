@@ -55,11 +55,11 @@ export default function DashboardLayout({
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-action flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center flex-shrink-0">
           <TrendingUp className="w-5 h-5 text-white" />
         </div>
         {!collapsed && (
-          <span className="text-xl font-bold text-gradient-neon whitespace-nowrap">
+          <span className="text-xl font-bold text-brand whitespace-nowrap">
             BetManager
           </span>
         )}
@@ -164,10 +164,10 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0">
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border/50 bg-sidebar">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-action flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center">
               <TrendingUp className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-gradient-neon">
+            <span className="text-lg font-bold text-brand">
               BetManager
             </span>
           </div>

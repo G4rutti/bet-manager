@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,31 +56,33 @@ export default function BetTypesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-green rounded-2xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-1">Tipos de Aposta</h1>
-        <p className="text-white/80 text-sm mb-4">Defina os tipos de mercado</p>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setEditingId(null); setFormName(""); } }}>
-          <DialogTrigger asChild>
-            <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0"><Plus className="w-4 h-4 mr-2" />Adicionar tipo</Button>
-          </DialogTrigger>
-          <DialogContent className="bg-card border-border">
-            <DialogHeader>
-              <DialogTitle>{editingId ? "Editar" : "Adicionar"} Tipo de Aposta</DialogTitle>
-              <DialogDescription>Ex: Resultado, Over/Under, BTTS...</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div className="space-y-2">
-                <Label>Nome</Label>
-                <Input placeholder="Ex: Over 2.5 Goals" value={formName} onChange={(e) => setFormName(e.target.value)} className="bg-background" onKeyDown={(e) => e.key === "Enter" && handleSave()} />
+      <PageHeader
+        title="Tipos de Aposta"
+        description="Defina os tipos de mercado"
+        action={
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setEditingId(null); setFormName(""); } }}>
+            <DialogTrigger asChild>
+              <Button className="bg-brand text-white hover:opacity-90"><Plus className="w-4 h-4 mr-2" />Adicionar tipo</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingId ? "Editar" : "Adicionar"} Tipo de Aposta</DialogTitle>
+                <DialogDescription>Ex: Resultado, Over/Under, BTTS...</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 mt-2">
+                <div className="space-y-2">
+                  <Label>Nome</Label>
+                  <Input placeholder="Ex: Over 2.5 Goals" value={formName} onChange={(e) => setFormName(e.target.value)} className="bg-background" onKeyDown={(e) => e.key === "Enter" && handleSave()} />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+                  <Button onClick={handleSave} className="bg-brand text-white hover:opacity-90">{editingId ? "Salvar" : "Adicionar"}</Button>
+                </div>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={handleSave} className="bg-gradient-action text-white hover:opacity-90">{editingId ? "Salvar" : "Adicionar"}</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
@@ -100,7 +103,7 @@ export default function BetTypesPage() {
               <span className="font-medium">{item.name}</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card border-border">
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => { setEditingId(item.id); setFormName(item.name); setDialogOpen(true); }}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
                   <DropdownMenuItem className="text-danger focus:text-danger" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 mr-2" />Excluir</DropdownMenuItem>
                 </DropdownMenuContent>

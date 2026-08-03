@@ -48,8 +48,6 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* Custom bet-manager colors */
-  --color-neon: var(--neon);
-  --color-neon-dim: var(--neon-dim);
   --color-success: var(--success);
   --color-danger: var(--danger);
   --color-warning: var(--warning);
@@ -58,73 +56,71 @@
 }
 
 /* ==============================
-   Dark-only theme (bet-analytix style)
+   Dark-only theme — neutral graphite + petrol/teal accent
    Always dark - no light mode
    ============================== */
 :root {
-  /* Core backgrounds - deep navy/dark */
-  --background: oklch(0.13 0.015 265);
-  --foreground: oklch(0.97 0 0);
+  /* Core backgrounds - true neutral, no warm or blue tint */
+  --background: #16171a;
+  --foreground: #e9eaec;
 
   /* Card surfaces */
-  --card: oklch(0.18 0.015 265);
-  --card-foreground: oklch(0.97 0 0);
+  --card: #1d1f22;
+  --card-foreground: #e9eaec;
 
   /* Popover */
-  --popover: oklch(0.18 0.015 265);
-  --popover-foreground: oklch(0.97 0 0);
+  --popover: #1d1f22;
+  --popover-foreground: #e9eaec;
 
-  /* Primary: Neon green (bet-analytix signature) */
-  --primary: oklch(0.82 0.18 165);
-  --primary-foreground: oklch(0.13 0.015 265);
+  /* Primary: petrol/teal */
+  --primary: #2f9e8f;
+  --primary-foreground: #ffffff;
 
   /* Secondary */
-  --secondary: oklch(0.22 0.015 265);
-  --secondary-foreground: oklch(0.9 0 0);
+  --secondary: #26282c;
+  --secondary-foreground: #d3d5d9;
 
   /* Muted */
-  --muted: oklch(0.22 0.015 265);
-  --muted-foreground: oklch(0.6 0 0);
+  --muted: #212327;
+  --muted-foreground: #8b8d93;
 
-  /* Accent: purple/indigo gradient accent */
-  --accent: oklch(0.22 0.015 265);
-  --accent-foreground: oklch(0.9 0 0);
+  /* Accent */
+  --accent: #26282c;
+  --accent-foreground: #d3d5d9;
 
   /* Destructive */
-  --destructive: oklch(0.65 0.2 25);
+  --destructive: #e5484d;
 
   /* Borders */
-  --border: oklch(0.25 0.015 265);
-  --input: oklch(0.22 0.015 265);
-  --ring: oklch(0.82 0.18 165);
+  --border: #2a2c30;
+  --input: #212327;
+  --ring: #2f9e8f;
 
-  /* Charts - neon green palette */
-  --chart-1: oklch(0.82 0.18 165);
-  --chart-2: oklch(0.65 0.15 280);
-  --chart-3: oklch(0.7 0.15 145);
-  --chart-4: oklch(0.75 0.12 55);
-  --chart-5: oklch(0.6 0.18 25);
+  /* Charts - restrained, distinct hues */
+  --chart-1: #2f9e8f;
+  --chart-2: #8b7fd9;
+  --chart-3: #e9a23b;
+  --chart-4: #5b9bd5;
+  --chart-5: #d97a86;
 
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
   /* Sidebar */
-  --sidebar: oklch(0.16 0.015 265);
-  --sidebar-foreground: oklch(0.9 0 0);
-  --sidebar-primary: oklch(0.82 0.18 165);
-  --sidebar-primary-foreground: oklch(0.13 0.015 265);
-  --sidebar-accent: oklch(0.22 0.015 265);
-  --sidebar-accent-foreground: oklch(0.9 0 0);
-  --sidebar-border: oklch(0.25 0.015 265);
-  --sidebar-ring: oklch(0.82 0.18 165);
+  --sidebar: #131417;
+  --sidebar-foreground: #d3d5d9;
+  --sidebar-primary: #2f9e8f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1d1f22;
+  --sidebar-accent-foreground: #d3d5d9;
+  --sidebar-border: #232529;
+  --sidebar-ring: #2f9e8f;
 
   /* Custom tokens */
-  --neon: oklch(0.85 0.2 165);
-  --neon-dim: oklch(0.7 0.15 165);
-  --success: oklch(0.72 0.17 155);
-  --danger: oklch(0.65 0.22 25);
-  --warning: oklch(0.8 0.15 75);
-  --surface: oklch(0.2 0.015 265);
-  --surface-hover: oklch(0.25 0.015 265);
+  --success: #3fb87f;
+  --danger: #e5484d;
+  --warning: #e9a23b;
+  --surface: #1d1f22;
+  --surface-hover: #26282c;
 }
 
 @layer base {
@@ -143,44 +139,35 @@
    Custom utility classes
    ============================== */
 
-/* Neon green text gradient */
-.text-gradient-neon {
-  background: linear-gradient(135deg, oklch(0.85 0.2 165), oklch(0.7 0.15 155));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Brand text, solid primary color */
+.text-brand {
+  color: var(--primary);
 }
 
-/* Purple/indigo action gradient */
-.bg-gradient-action {
-  background: linear-gradient(135deg, oklch(0.5 0.2 280), oklch(0.55 0.2 290), oklch(0.6 0.18 310));
+/* Primary action fill */
+.bg-brand {
+  background: var(--primary);
 }
 
-.bg-gradient-action:hover {
-  background: linear-gradient(135deg, oklch(0.45 0.22 280), oklch(0.5 0.22 290), oklch(0.55 0.2 310));
+.bg-brand:hover {
+  background: color-mix(in oklab, var(--primary) 88%, black);
 }
 
-/* Green gradient for chart headers */
-.bg-gradient-green {
-  background: linear-gradient(135deg, oklch(0.65 0.18 165), oklch(0.75 0.16 155));
+/* Highlighted panel - flat surface with a primary-tinted border */
+.highlight-card {
+  background: var(--card);
+  border: 1px solid var(--border);
 }
 
-/* Glassmorphism card */
-.glass-card {
-  background: oklch(0.18 0.015 265 / 80%);
-  backdrop-filter: blur(12px);
-  border: 1px solid oklch(0.3 0.015 265 / 50%);
-}
-
-/* Stat card with subtle gradient border */
+/* Stat card with subtle border */
 .stat-card {
-  background: oklch(0.16 0.015 265);
-  border: 1px solid oklch(0.25 0.015 265);
+  background: var(--card);
+  border: 1px solid var(--border);
   transition: all 0.2s ease;
 }
 
 .stat-card:hover {
-  border-color: oklch(0.35 0.015 265);
+  border-color: color-mix(in oklab, var(--border) 60%, var(--foreground));
   transform: translateY(-1px);
 }
 
@@ -196,42 +183,43 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: oklch(0.13 0.015 265);
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.3 0.015 265);
+  background: var(--border);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.4 0.015 265);
+  background: color-mix(in oklab, var(--border) 60%, var(--foreground));
 }
 
 /* Bet state colors */
 .bet-won {
-  color: oklch(0.72 0.17 155);
+  color: var(--success);
 }
 
 .bet-lost {
-  color: oklch(0.65 0.22 25);
+  color: var(--danger);
 }
 
 .bet-pending {
-  color: oklch(0.7 0.15 75);
+  color: var(--warning);
 }
 
 .bet-refunded {
-  color: oklch(0.6 0 0);
+  color: var(--muted-foreground);
 }
 
-/* Pulse animation for pending bets */
+/* Subtle pulse for pending bets (no glow) */
 @keyframes pulse-neon {
-  0%, 100% {
-    box-shadow: 0 0 0 0 oklch(0.85 0.2 165 / 40%);
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 35%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 6px oklch(0.85 0.2 165 / 0%);
+    box-shadow: 0 0 0 5px color-mix(in oklab, var(--primary) 0%, transparent);
   }
 }
 
