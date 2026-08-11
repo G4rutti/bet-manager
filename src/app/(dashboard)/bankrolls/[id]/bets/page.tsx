@@ -28,6 +28,7 @@ import {
   DollarSign,
   Wallet,
   Landmark,
+  Download,
 } from "lucide-react";
 import type { Bet, BetState } from "@/types";
 import { BetFormDialog } from "@/components/forms/BetFormDialog";
@@ -427,6 +428,80 @@ export default function BetsListPage({ params }: PageProps) {
     setBulkDeleteDialogOpen(false);
   };
 
+  const exportToCSV = () => {
+    const stateLabels: Record<string, string> = {
+      won: "Ganhou",
+      lost: "Perdeu",
+      pending: "Pendente",
+      refunded: "Reembolsada",
+      half_won: "Meio ganhou",
+      half_lost: "Meio perdeu",
+    };
+    const formatLabels: Record<string, string> = {
+      simple: "Simples",
+      back: "Back",
+      lay: "Lay",
+    };
+
+    const header = [
+      "Data",
+      "Evento",
+      "Esporte",
+      "Casa de Apostas",
+      "Formato",
+      "Resultado",
+      "Stake (R$)",
+      "Odds",
+      "Odds Fechamento",
+      "Comissão (%)",
+      "Lucro/Perda (R$)",
+      "Fonte da Stake",
+      "Notas",
+    ];
+
+    const betsToExport = [...sortedBets].sort(
+      (a, b) => new Date(a.bet_date).getTime() - new Date(b.bet_date).getTime()
+    );
+
+    const rows = betsToExport.map((bet) => [
+      bet.bet_date,
+      bet.label,
+      bet.sport,
+      bet.bookmaker?.name ?? "—",
+      formatLabels[bet.bet_format] ?? bet.bet_format,
+      stateLabels[bet.state] ?? bet.state,
+      bet.stake.toFixed(2),
+      bet.odds.toString(),
+      bet.closing_odds?.toString() ?? "",
+      bet.commission_pct.toString(),
+      bet.profit_loss.toFixed(2),
+      bet.stake_source === "bookmaker" ? "Casa" : "Saldo Livre",
+      bet.notes ?? "",
+    ]);
+
+    const escapeCsv = (val: string) => {
+      if (val.includes('"') || val.includes(",") || val.includes("\n")) {
+        return `"${val.replace(/"/g, '""')}"`;
+      }
+      return val;
+    };
+
+    const csvContent = [header, ...rows]
+      .map((row) => row.map(escapeCsv).join(","))
+      .join("\n");
+
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const today = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
+    link.href = url;
+    link.download = `apostas-${today}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${betsToExport.length} apostas exportadas com sucesso!`);
+  };
+
   return (
     <div className="space-y-4 pb-20">
       {/* Header */}
@@ -440,8 +515,19 @@ export default function BetsListPage({ params }: PageProps) {
           <h1 className="text-xl font-bold">Apostas</h1>
         </div>
 
-        {/* Selection mode toggle button */}
+        {/* Action buttons */}
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToCSV}
+            disabled={sortedBets.length === 0}
+            className="h-8 text-xs gap-1.5 border-border/80 text-muted-foreground hover:text-foreground"
+            title="Exportar apostas para CSV"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Exportar CSV</span>
+          </Button>
           <Button
             variant={selectionMode || selectedBetIds.size > 0 ? "default" : "outline"}
             size="sm"

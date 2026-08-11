@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -8,6 +8,13 @@ const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-figures",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -30,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="pt-BR" className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`} suppressHydrationWarning data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <TooltipProvider>
           {children}

@@ -42,7 +42,7 @@ export function StatCard({
             </div>
             <div>
               <p className="text-xs text-muted-foreground">{label}</p>
-              <p className={cn("text-lg font-bold tabular-nums", color)}>
+              <p className={cn("figure text-lg font-semibold", color)}>
                 {value}
               </p>
             </div>
@@ -82,7 +82,7 @@ export function StatCard({
         </div>
         <p
           className={cn(
-            "font-bold tabular-nums",
+            "figure font-semibold",
             isSm ? "text-lg" : "text-xl",
             color
           )}

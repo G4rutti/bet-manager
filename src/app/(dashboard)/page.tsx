@@ -73,7 +73,7 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Visão geral das suas apostas
           </p>
@@ -177,7 +177,7 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">
                           ROI
                         </p>
-                        <p className={`text-lg font-bold tabular-nums ${bankroll.roi >= 0 ? "text-success" : "text-danger"}`}>
+                        <p className={`figure text-lg font-semibold ${bankroll.roi >= 0 ? "text-success" : "text-danger"}`}>
                           {bankroll.roi.toFixed(2)}%
                         </p>
                       </div>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                         <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">
                           Progression
                         </p>
-                        <p className={`text-lg font-bold tabular-nums ${bankroll.progression >= 0 ? "text-success" : "text-danger"}`}>
+                        <p className={`figure text-lg font-semibold ${bankroll.progression >= 0 ? "text-success" : "text-danger"}`}>
                           {bankroll.progression.toFixed(2)}%
                         </p>
                       </div>
